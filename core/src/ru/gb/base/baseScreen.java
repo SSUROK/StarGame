@@ -87,6 +87,8 @@ public class baseScreen implements Screen, InputProcessor {
         return false;
     }
 
+
+
     @Override
     public boolean keyUp(int keycode) {
         return false;
@@ -99,27 +101,23 @@ public class baseScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-//        System.out.println("touchDown screenX = " + screenX + " screenY = " + screenY);
         touch.set(screenX, Gdx.graphics.getHeight() - screenY).mul(screenToWorld);
         touchDown(touch, pointer, button);
         return false;
     }
 
     public boolean touchDown(Vector2 touch, int pointer, int button) {
-//        System.out.println("touchDown touch.X = " + touch.x + " touch.Y = " + touch.y);
         return false;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-//        System.out.println("touchUp screenX = " + screenX + " screenY = " + screenY);
         touch.set(screenX, Gdx.graphics.getHeight() - screenY).mul(screenToWorld);
         touchUp(touch, pointer, button);
         return false;
     }
 
     public boolean touchUp(Vector2 touch, int pointer, int button) {
-//        System.out.println("touchUp touch.X = " + touch.x + " touch.Y = " + touch.y);
         return false;
     }
 

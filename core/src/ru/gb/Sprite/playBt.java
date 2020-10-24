@@ -1,28 +1,33 @@
 package ru.gb.Sprite;
 
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
-import ru.gb.Screen.menuScreen;
-import ru.gb.base.Sprite;
+import ru.gb.Screen.GameScreen;
+import ru.gb.base.BaseButton;
 import ru.gb.math.Rect;
 
-public class playBt extends Sprite {
+public class playBt extends BaseButton {
 
-    public playBt(TextureRegion region) {
-        super(region);
+    private static final float MARGIN = 0.025f;
+
+    private final Game game;
+
+    public playBt(TextureAtlas atlas, Game game) {
+        super(atlas.findRegion("btPlay"));
+        this.game = game;
     }
 
     @Override
     public void resize(Rect worldBounds) {
-        setHeightProportion(worldBounds.getHeight()/12);
-        pos.set(worldBounds.pos);
+        setHeightProportion(0.25f);
+        setLeft(worldBounds.getLeft() + MARGIN);
+        setBottom(worldBounds.getBottom() + MARGIN);
     }
 
     @Override
-    public boolean touchDown(Vector2 touch, int pointer, int button) {
-        menuScreen.inGame = true;
-        return false;
+    public void action() {
+        game.setScreen(new GameScreen());
     }
 
 }
