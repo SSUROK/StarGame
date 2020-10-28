@@ -1,8 +1,10 @@
 package ru.gb.Screen;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 import ru.gb.Sprite.starShip;
@@ -10,17 +12,21 @@ import ru.gb.base.baseScreen;
 import ru.gb.math.Rect;
 import ru.gb.Sprite.Background;
 import ru.gb.Sprite.Star;
+import ru.gb.pool.BulletPool;
 
 public class GameScreen extends baseScreen {
 
     private static final int STAR_COUNT = 64;
 
     private TextureAtlas atlas;
-    private Texture bg, ship;
+    private Texture bg;
 
     private Background background;
     private Star[] stars;
     private starShip starShip;
+    private BulletPool bulletPool;
+    private Sound shotSound;
+    protected Music music;
 
 
     @Override
@@ -28,15 +34,18 @@ public class GameScreen extends baseScreen {
         super.show();
         atlas = new TextureAtlas("textures/mainAtlas.tpack");
         bg = new Texture("textures/bg.jpg");
+        shotSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bullet.wav"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("sounds/music.mp3"));
 
         background = new Background(bg);
+        bulletPool = new BulletPool();
         stars = new Star[STAR_COUNT];
         for (int i = 0; i < STAR_COUNT; i++) {
             stars[i] = new Star(atlas);
         }
-
-        ship = new Texture("textures/starship.png");
-        starShip = new starShip(ship);
+        starShip = new starShip(atlas, bulletPool, shotSound);
+        music.play();
+        music.setLooping(true);
     }
 
     @Override
@@ -44,6 +53,7 @@ public class GameScreen extends baseScreen {
         super.render(delta);
         update(delta);
         checkCollision();
+        freeAllDestroyed();
         draw();
     }
 
@@ -61,7 +71,9 @@ public class GameScreen extends baseScreen {
     public void dispose() {
         bg.dispose();
         atlas.dispose();
-        ship.dispose();
+        bulletPool.dispose();
+        shotSound.dispose();
+        music.dispose();
         super.dispose();
     }
 
@@ -73,7 +85,8 @@ public class GameScreen extends baseScreen {
 
     @Override
     public boolean keyUp(int keycode) {
-        return super.keyUp(keycode);
+        starShip.keyUp(keycode);
+        return false;
     }
 
     @Override
@@ -84,13 +97,15 @@ public class GameScreen extends baseScreen {
 
     @Override
     public boolean touchUp(Vector2 touch, int pointer, int button) {
-        return super.touchUp(touch, pointer, button);
+        starShip.touchUp(touch, pointer, button);
+        return false;
     }
 
     private void update(float delta) {
         for (Star star : stars) {
             star.update(delta);
         }
+        bulletPool.updateActiveSprites(delta);
         starShip.update(delta);
     }
 
@@ -98,10 +113,15 @@ public class GameScreen extends baseScreen {
 
     }
 
+    private void freeAllDestroyed() {
+        bulletPool.freeAllDestroyedActiveSprites();
+    }
+
     private void draw() {
         batch.begin();
         background.draw(batch);
         starShip.draw(batch);
+        bulletPool.drawActiveSprites(batch);
         for (Star star : stars) {
             star.draw(batch);
         }
