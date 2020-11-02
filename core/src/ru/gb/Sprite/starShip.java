@@ -1,5 +1,6 @@
 package ru.gb.Sprite;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,25 +9,18 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 import ru.gb.base.Sprite;
+import ru.gb.base.ship;
 import ru.gb.math.Rect;
 import ru.gb.pool.BulletPool;
 
-public class starShip extends Sprite {
+public class starShip extends ship {
 
     private static final float SHIP_HEIGHT = 0.15f;
     private static final float MARGIN = 0.05f;
+    private static final float RELOAD_INTERVAL = 0.2f;
+    private static final int HP = 100;
 
     private static final int INVALID_POINTER = -1;
-
-    private Rect worldBounds;
-    private BulletPool bulletPool;
-    private TextureRegion bulletRegion;
-    private Sound shotSound;
-
-    private final Vector2 v = new Vector2();
-    private final Vector2 v0 = new Vector2(0.5f, 0);
-    private final Vector2 bulletV = new Vector2(0, 0.5f);
-    private final Vector2 bulletPos = new Vector2();
 
     private boolean pressedLeft;
     private boolean pressedRight;
@@ -36,10 +30,16 @@ public class starShip extends Sprite {
     private int rightPointer = INVALID_POINTER;
     private static int timer = 0;
 
-    public starShip(TextureAtlas atlas, BulletPool bulletPool, Sound shotSound) {
+    public starShip(TextureAtlas atlas, BulletPool bulletPool) {
         super(atlas.findRegion("main_ship"), 1, 2, 2);
-        this.shotSound = shotSound;
+        this.bulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laser.wav"));
         this.bulletPool = bulletPool;
+        this.bulletHeight = 0.01f;
+        this.damage = 1;
+        this.v0.set(0.5f, 0);
+        this.bulletV.set(0, 0.5f);
+        this.reloadInterval = RELOAD_INTERVAL;
+        this.hp = HP;
         this.bulletRegion = atlas.findRegion("bulletMainShip");
     }
 
@@ -52,7 +52,9 @@ public class starShip extends Sprite {
 
     @Override
     public void update(float delta) {
-        pos.mulAdd(v, delta);
+
+        bulletPos.set(pos.x, getTop());
+        super.update(delta);
 //        if (getRight() > worldBounds.getRight()) {
 //            setRight(worldBounds.getRight());
 //            stop();
@@ -73,6 +75,10 @@ public class starShip extends Sprite {
                 timer++;
             }
         }
+    }
+
+    public void dispose() {
+        bulletSound.dispose();
     }
 
     @Override
@@ -178,10 +184,4 @@ public class starShip extends Sprite {
         v.setZero();
     }
 
-    private void shoot() {
-        Bullet bullet = bulletPool.obtain();
-        bulletPos.set(pos.x, getTop());
-        bullet.set(this, bulletRegion, bulletPos, bulletV, worldBounds, 1, 0.01f);
-        shotSound.play(0.6f);
-    }
 }
