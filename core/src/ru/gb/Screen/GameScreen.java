@@ -13,6 +13,8 @@ import ru.gb.math.Rect;
 import ru.gb.Sprite.Background;
 import ru.gb.Sprite.Star;
 import ru.gb.pool.BulletPool;
+import ru.gb.pool.enemyShipPool;
+import ru.gb.utils.enemyEmitter;
 
 public class GameScreen extends baseScreen {
 
@@ -25,8 +27,11 @@ public class GameScreen extends baseScreen {
     private Star[] stars;
     private starShip starShip;
     private BulletPool bulletPool;
-    private Sound shotSound;
+    private enemyShipPool enemyShipPool;
+    private enemyEmitter enemyEmitter;
+
     protected Music music;
+    private Sound enemyBulletSound;
 
 
     @Override
@@ -34,16 +39,21 @@ public class GameScreen extends baseScreen {
         super.show();
         atlas = new TextureAtlas("textures/mainAtlas.tpack");
         bg = new Texture("textures/bg.jpg");
-        shotSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bullet.wav"));
+        enemyBulletSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bullet.wav"));
         music = Gdx.audio.newMusic(Gdx.files.internal("sounds/music.mp3"));
 
         background = new Background(bg);
         bulletPool = new BulletPool();
+        enemyShipPool = new enemyShipPool(bulletPool, worldBounds);
         stars = new Star[STAR_COUNT];
         for (int i = 0; i < STAR_COUNT; i++) {
             stars[i] = new Star(atlas);
         }
-        starShip = new starShip(atlas, bulletPool, shotSound);
+        starShip = new starShip(atlas, bulletPool);
+        enemyEmitter = new enemyEmitter(worldBounds, enemyShipPool, enemyBulletSound, atlas);
+
+        music.setLooping(true);
+        music.play();
         music.play();
         music.setLooping(true);
     }
@@ -72,8 +82,10 @@ public class GameScreen extends baseScreen {
         bg.dispose();
         atlas.dispose();
         bulletPool.dispose();
-        shotSound.dispose();
+        enemyShipPool.dispose();
         music.dispose();
+        enemyBulletSound.dispose();
+        starShip.dispose();
         super.dispose();
     }
 
@@ -105,8 +117,10 @@ public class GameScreen extends baseScreen {
         for (Star star : stars) {
             star.update(delta);
         }
+        enemyShipPool.updateActiveSprites(delta);
         bulletPool.updateActiveSprites(delta);
         starShip.update(delta);
+        enemyEmitter.generate(delta);
     }
 
     private void checkCollision() {
@@ -115,11 +129,13 @@ public class GameScreen extends baseScreen {
 
     private void freeAllDestroyed() {
         bulletPool.freeAllDestroyedActiveSprites();
+        enemyShipPool.freeAllDestroyedActiveSprites();
     }
 
     private void draw() {
         batch.begin();
         background.draw(batch);
+        enemyShipPool.drawActiveSprites(batch);
         starShip.draw(batch);
         bulletPool.drawActiveSprites(batch);
         for (Star star : stars) {
